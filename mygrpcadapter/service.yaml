@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mygrpcadapter
+  namespace: cloudlink-msp
+  labels:
+    app: mygrpcadapter
+spec:
+  type: ClusterIP
+  ports:
+  - name: grpc
+    protocol: TCP
+    port: 38355
+    targetPort: 38355
+  selector:
+    app: mygrpcadapter
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mygrpcadapter
+  namespace: cloudlink-msp
+  labels:
+    app: mygrpcadapter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mygrpcadapter
+      annotations:
+        sidecar.istio.io/inject: "false"
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+    spec:
+      containers:
+      - name: mygrpcadapter
+        image: myadapter:v3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 38355
+        volumeMounts:
+        - name: transient-storage
+          mountPath: /volume
+      volumes:
+      - name: transient-storage
+        emptyDir: {}
